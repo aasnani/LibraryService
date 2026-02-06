@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: library-db
+    # Using default settings and user/password for ease, use secret store and custom settings for security in practice
+    # Ideally behind network protection (vpc,gateway,firewall,etc.)
+    environment:
+      POSTGRES_DB: library_db
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: developer_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U developer -d library_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  library-service:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+    # defaults, can override with docker args for security
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/library_db
+      SPRING_DATASOURCE_USERNAME: developer
+      SPRING_DATASOURCE_PASSWORD: developer_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
