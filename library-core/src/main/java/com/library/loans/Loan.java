@@ -21,9 +21,9 @@ import java.time.OffsetDateTime;
  */
 @Entity
 @Table(name = "loans", indexes = {
-    @Index(name = "idx_active_loans_member", columnList = "member_id, returnedAt"),
-    @Index(name = "idx_loan_due_date", columnList = "dueDate"),
-    @Index(name = "idx_loan_created_at", columnList = "createdAt")
+    @Index(name = "idx_active_loans_member", columnList = "member_id, returned_at"),
+    @Index(name = "idx_loan_due_date", columnList = "due_date"),
+    @Index(name = "idx_loan_created_at", columnList = "created_at")
 })
 @Getter
 @Setter
@@ -56,7 +56,7 @@ public class Loan extends BaseEntity {
      * The date by which the book is expected to be returned.
      * Stored as a date only, as library policies are typically based on calendar days.
      */
-    @Column(nullable = false)
+    @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
 
     /**

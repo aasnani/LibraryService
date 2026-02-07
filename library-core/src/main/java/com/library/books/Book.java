@@ -11,10 +11,10 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "books", indexes = {
-    @Index(name = "idx_book_isbn", columnList = "isbn", unique = true),
-    @Index(name = "idx_book_title", columnList = "title"),
-    @Index(name = "idx_book_author", columnList = "author"),
-    @Index(name = "idx_book_number", columnList = "bookNumber")
+        @Index(name = "idx_book_isbn", columnList = "isbn", unique = true),
+        @Index(name = "idx_book_title", columnList = "title"),
+        @Index(name = "idx_book_author", columnList = "author"),
+        @Index(name = "idx_book_number", columnList = "book_number")
 })
 @Getter
 @Setter
@@ -27,9 +27,12 @@ public class Book extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String isbn;
 
+    @Column(name = "total_copies", nullable = false)
     private int totalCopies;
+
+    @Column(name = "available_copies", nullable = false)
     private int availableCopies;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "book_number", unique = true, nullable = false)
     private Long bookNumber;
 }

@@ -10,21 +10,22 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "members", indexes = {
-    @Index(name = "idx_member_email", columnList = "email", unique = true),
-    @Index(name = "idx_member_membership_number", columnList = "membershipNumber", unique = true),
-    @Index(name = "idx_member_last_name", columnList = "lastName")
+        @Index(name = "idx_member_email", columnList = "email", unique = true),
+        @Index(name = "idx_member_membership_number", columnList = "membership_number", unique = true),
+        @Index(name = "idx_member_last_first_name", columnList = "last_name, first_name")
 })
 @Getter
 @Setter
 public class Member extends BaseEntity {
-    @Column(nullable = false)
+    @Column(name = "first_name", nullable = false)
     private String firstName;
-    @Column(nullable = false)
+
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "membership_number", unique = true, nullable = false)
     private Long membershipNumber;
 }

@@ -45,11 +45,4 @@ public abstract class BaseEntity {
     @Generated
     @Column(name = "updated_at", insertable = false, updatable = false)
     private OffsetDateTime updatedAt;
-
-    /**
-     * Flag indicating if the record has been soft-deleted.
-     * Defaults to false.
-     */
-    @Column(nullable = false)
-    private boolean deleted = false;
 }

@@ -28,8 +28,7 @@ CREATE TABLE books (
     total_copies INTEGER NOT NULL DEFAULT 0,
     available_copies INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Handled by Postgres on INSERT
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Handled by Trigger on UPDATE
-    deleted BOOLEAN NOT NULL DEFAULT FALSE -- Soft-delete support
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP -- Handled by Trigger on UPDATE
 );
 
 -- MEMBERS: User management
@@ -40,8 +39,7 @@ CREATE TABLE members (
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- LOANS: The junction table linking Members and Books
@@ -53,8 +51,7 @@ CREATE TABLE loans (
     due_date DATE NOT NULL, -- Date only (no time) as library policies are usually calendar-day based
     returned_at TIMESTAMP WITH TIME ZONE, -- NULL indicates an active loan
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. TRIGGER ATTACHMENTS
@@ -80,7 +77,7 @@ CREATE UNIQUE INDEX idx_member_email ON members(email);
 -- Unique index for physical membership card scanning
 CREATE UNIQUE INDEX idx_member_membership_number ON members(membership_number);
 -- Standard index for directory searching by surname
-CREATE INDEX idx_member_last_name ON members(last_name);
+CREATE INDEX idx_member_last_first_name ON members(last_name, first_name);
 
 -- LOANS Table Indexes
 -- Composite Index: Optimized for finding unreturned books for a specific member
