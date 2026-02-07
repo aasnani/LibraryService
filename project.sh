@@ -7,6 +7,13 @@ case "$1" in
   gradle_build)
     ./gradlew clean build -x test
     ;;
+  gradle_test)
+    ./gradlew test
+    ;;
+  gradle_build_test)
+    ./gradlew clean build -x test
+    ./gradlew test
+    ;;
   docker_build)
     docker build -t library-service .
     ;;
@@ -17,6 +24,6 @@ case "$1" in
     docker compose up --build
     ;;
   *)
-    echo "Usage: ./project.sh {gradle_lock|gradle_build|docker_build|docker_run|docker_build_run}"
+    echo "Usage: ./project.sh {gradle_lock|gradle_build|gradle_test|gradle_build_test|docker_build|docker_run|docker_build_run}"
     exit 1
 esac

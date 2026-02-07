@@ -4,9 +4,8 @@ repositories {
 
 plugins {
     java
-    id("org.springframework.boot") version "3.4.2" apply false
-    id("io.spring.dependency-management") version "1.1.7" apply false
-
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.dependency.management) apply false
 }
 
 java {
@@ -20,7 +19,6 @@ dependencyLocking {
 }
 
 subprojects {
-    // This applies to ALL modules (library-service-application, etc.)
     apply(plugin = "java")
     apply(plugin = "io.spring.dependency-management")
 
@@ -42,6 +40,10 @@ subprojects {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
         }
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
     }
 }
 
