@@ -13,7 +13,8 @@ import lombok.Setter;
 @Table(name = "books", indexes = {
     @Index(name = "idx_book_isbn", columnList = "isbn", unique = true),
     @Index(name = "idx_book_title", columnList = "title"),
-    @Index(name = "idx_book_author", columnList = "author")
+    @Index(name = "idx_book_author", columnList = "author"),
+    @Index(name = "idx_book_number", columnList = "bookNumber")
 })
 @Getter
 @Setter
