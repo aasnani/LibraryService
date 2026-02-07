@@ -17,14 +17,4 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
     List<Book> findByAuthorContainingIgnoreCase(String author);
 
     Optional<Book> findByBookNumber(long bookNumber);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Book b SET b.availableCopies = b.availableCopies - 1 " +
-           "WHERE b.id = :id AND b.availableCopies > 0")
-    int decrementAvailableCopies(UUID id);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Book b SET b.availableCopies = b.availableCopies + 1 " +
-           "WHERE b.id = :id AND b.availableCopies < b.totalCopies")
-    int incrementAvailableCopies(UUID id);
 }
