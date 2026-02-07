@@ -3,11 +3,10 @@ WORKDIR /app
 
 COPY gradlew .
 COPY gradle gradle
-
-RUN ./gradlew --version --no-daemon
-
-COPY build.gradle.kts .
 COPY settings.gradle.kts .
+COPY build.gradle.kts .
+
+COPY library-data/build.gradle.kts library-data/
 COPY library-service-application/build.gradle.kts library-service-application/
 
 RUN ./gradlew :library-service-application:dependencies --no-daemon
