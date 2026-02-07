@@ -48,10 +48,10 @@ class MemberRepositoryTest extends BaseRepositoryTest {
         saveMember("Alice", "Smith", "alice@test.com", 101L);
         saveMember("Bob", "SMITH", "bob@test.com", 102L);
 
-        List<Member> results = memberRepository.findByLastNameIgnoreCase("smith");
+        List<Member> results = memberRepository.findByLastNameIgnoreCaseAndFirstNameIgnoreCase("smith", "alice");
 
-        assertThat(results).hasSize(2);
-        assertThat(results).extracting(Member::getFirstName).containsExactlyInAnyOrder("Alice", "Bob");
+        assertThat(results).hasSize(1);
+        assertThat(results).extracting(Member::getFirstName).containsExactlyInAnyOrder("Alice");
     }
 
     @Test
