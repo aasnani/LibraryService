@@ -10,10 +10,6 @@ case "$1" in
   gradle_test)
     ./gradlew test
     ;;
-  gradle_build_test)
-    ./gradlew clean build -x test
-    ./gradlew test
-    ;;
   docker_build)
     docker build -t library-service .
     ;;
