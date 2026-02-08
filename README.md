@@ -48,6 +48,8 @@ The following rules are enforced in the service layer:
 2. **Overdue Block**: Members with at least one overdue loan are blocked from further borrowing.
 3. **Loan Duration**: Due dates are calculated based on a configurable number of days from the borrowing date.
 
+These rules can be found in `application.yml`.
+
 ---
 
 ## 4. Security & Authentication
