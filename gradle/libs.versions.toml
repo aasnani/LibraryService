@@ -6,25 +6,39 @@ lombok = "1.18.34"
 flyway = "10.20.1"
 testcontainers = "1.20.4"
 junitPlatform = "1.11.4"
+jakartaAnnotation = "2.1.1"
+jakartaValidation = "3.0.2"
+springDoc = "2.8.0"
+
 
 [libraries]
 # Spring Boot Starters
 spring-boot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa", version.ref = "springBoot" }
 spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web", version.ref = "springBoot" }
 spring-boot-starter-actuator = { group = "org.springframework.boot", name = "spring-boot-starter-actuator", version.ref = "springBoot" }
+spring-boot-starter-validation = {group = "org.springframework.boot", name = "spring-boot-starter-validation", version.ref = "springBoot" }
+
 # Database Migrations
 flyway-core = { group = "org.flywaydb", name = "flyway-core", version.ref = "flyway"}
 flyway-database-postgresql = { group = "org.flywaydb", name = "flyway-database-postgresql", version.ref = "flyway" }
 testcontainers-bom = { group = "org.testcontainers", name = "testcontainers-bom", version.ref = "testcontainers" }
+
 # Testing
 testcontainers-postgresql = { group = "org.testcontainers", name = "postgresql" }
 testcontainers-junit = { group = "org.testcontainers", name = "junit-jupiter" }
 spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
 
+#Validation
+jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakartaAnnotation" }
+jakarta-validation = { group = "jakarta.validation", name = "jakarta.validation-api", version.ref = "jakartaValidation" }
+
 # Database & Tools
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+
+# Documentation
+spring-doc = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springDoc" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }

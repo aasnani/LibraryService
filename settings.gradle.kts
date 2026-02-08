@@ -4,4 +4,4 @@ plugins {
 
 rootProject.name = "LibraryService"
 include("library-service-application")
-include("library-data")
+include("library-core")

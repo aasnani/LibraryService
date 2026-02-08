@@ -5,13 +5,9 @@ case "$1" in
     ./gradlew writeAllLocks --write-locks --no-configuration-cache
     ;;
   gradle_build)
-    ./gradlew clean build -x test
+    ./gradlew build
     ;;
   gradle_test)
-    ./gradlew test
-    ;;
-  gradle_build_test)
-    ./gradlew clean build -x test
     ./gradlew test
     ;;
   docker_build)

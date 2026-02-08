@@ -12,6 +12,12 @@ logging:
     root: INFO
     org.springframework.web: DEBUG
 
+library:
+  loans:
+    max-active: 5
+    overdue-block-threshold: 0
+    loan-duration-days: 14
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/library_db}
@@ -22,6 +28,10 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
   jpa:
     hibernate:

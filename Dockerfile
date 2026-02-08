@@ -6,7 +6,7 @@ COPY gradle gradle
 COPY settings.gradle.kts .
 COPY build.gradle.kts .
 
-COPY library-data/build.gradle.kts library-data/
+COPY library-core/build.gradle.kts library-core/
 COPY library-service-application/build.gradle.kts library-service-application/
 
 RUN ./gradlew :library-service-application:dependencies --no-daemon
