@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -49,10 +50,11 @@ public class LibraryController {
     /**
      * Retrieves all books in the library with pagination.
      *
-     * @param pageable pagination and sorting information
+     * @param request pagination request containing page and size
      * @return a page of {@link BookResponse} records
      */
     @GetMapping("/books")
+    @PreAuthorize("hasRole('USER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get all books", tags = "Books")
     public Page<BookResponse> getAllBooks(PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.page(), request.size());
@@ -66,6 +68,7 @@ public class LibraryController {
      * @return the corresponding {@link BookResponse}
      */
     @GetMapping("/books/{bookId}")
+    @PreAuthorize("hasRole('USER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get a book by ID", tags = "Books")
     public BookResponse getBook(@PathVariable UUID bookId) {
         return toBookResponse(libraryService.getBook(bookId));
@@ -78,6 +81,7 @@ public class LibraryController {
      * @return the created {@link BookResponse}
      */
     @PostMapping("/books")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add a new book", tags = "Books")
     public BookResponse addBook(@RequestBody @Valid CreateBookRequest request) {
@@ -97,6 +101,7 @@ public class LibraryController {
      */
     @PutMapping("/books")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Update a book", tags = "Books")
     public BookResponse updateBook(@RequestBody @Valid UpdateBookRequest request) {
         Book updatedBook = new Book();
@@ -115,6 +120,7 @@ public class LibraryController {
      * @param bookId the UUID of the book to remove
      */
     @DeleteMapping("/books/{bookId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove a book", tags = "Books")
     public void removeBook(@PathVariable UUID bookId) {
@@ -128,10 +134,11 @@ public class LibraryController {
     /**
      * Retrieves all members with pagination.
      *
-     * @param pageable pagination and sorting information
+     * @param request pagination request
      * @return a page of {@link MemberResponse} records
      */
     @GetMapping("/members")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get all members", tags = "Member")
     public Page<MemberResponse> getAllMembers(PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.page(), request.size());
@@ -145,26 +152,10 @@ public class LibraryController {
      * @return the corresponding {@link MemberResponse}
      */
     @GetMapping("/members/{memberId}")
+    @PreAuthorize("@memberSecurity.isOwner(#memberId, authentication.name) or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get a member by ID", tags = "Member")
     public MemberResponse getMember(@PathVariable UUID memberId) {
         return toMemberResponse(libraryService.getMember(memberId));
-    }
-
-    /**
-     * Registers a new library member.
-     *
-     * @param request the {@link CreateMemberRequest} containing the member details
-     * @return the created {@link MemberResponse}
-     */
-    @PostMapping("/members")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register a new member", tags = "Member")
-    public MemberResponse registerMember(@RequestBody @Valid CreateMemberRequest request) {
-        Member member = new Member();
-        member.setFirstName(request.firstName());
-        member.setLastName(request.lastName());
-        member.setEmail(request.email());
-        return toMemberResponse(libraryService.registerMember(member));
     }
 
     /**
@@ -174,6 +165,7 @@ public class LibraryController {
      * @return the updated {@link MemberResponse}
      */
     @PutMapping("/members")
+    @PreAuthorize("@memberSecurity.isOwner(T(java.util.UUID).fromString(#request.id()), authentication.name) or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Update a member", tags = "Member")
     public MemberResponse updateMembers(@RequestBody @Valid UpdateMemberRequest request) {
@@ -187,11 +179,30 @@ public class LibraryController {
     }
 
     /**
+     * Registers a new library member.
+     *
+     * @param request the {@link CreateMemberRequest} containing the member details
+     * @return the created {@link MemberResponse}
+     */
+    @PostMapping("/members")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Register a new member", tags = "Member")
+    public MemberResponse registerMember(@RequestBody @Valid CreateMemberRequest request) {
+        Member member = new Member();
+        member.setFirstName(request.firstName());
+        member.setLastName(request.lastName());
+        member.setEmail(request.email());
+        return toMemberResponse(libraryService.registerMember(member));
+    }
+
+    /**
      * Removes a member from the library.
      *
      * @param memberId the UUID of the member to remove
      */
     @DeleteMapping("/members/{memberId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove a member", tags = "Member")
     public void removeMember(@PathVariable UUID memberId) {
@@ -209,6 +220,7 @@ public class LibraryController {
      * @return the created {@link LoanResponse}
      */
     @PostMapping("/loans")
+    @PreAuthorize("@memberSecurity.isOwner(T(java.util.UUID).fromString(#request.memberId()), authentication.name) or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Checkout a book for a member", tags = "Library")
     public LoanResponse createLoan(@RequestBody @Valid CreateLoanRequest request) {
@@ -227,6 +239,7 @@ public class LibraryController {
      * @param bookId   the UUID of the book being returned
      */
     @PatchMapping("/loans")
+    @PreAuthorize("@memberSecurity.isOwner(#memberId, authentication.name) or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Return a borrowed book", tags = "Library")
     public void returnLoan(@RequestParam UUID memberId, @RequestParam UUID bookId) {
@@ -236,10 +249,11 @@ public class LibraryController {
     /**
      * Retrieves all loans with pagination.
      *
-     * @param pageable pagination and sorting information
+     * @param request pagination request
      * @return a page of {@link LoanResponse} records
      */
     @GetMapping("/loans")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get all loans", tags = "Loans")
     public Page<LoanResponse> getAllLoans(PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.page(), request.size());
@@ -250,10 +264,11 @@ public class LibraryController {
      * Retrieves all loans for a specific member with pagination.
      *
      * @param memberId the UUID of the member
-     * @param pageable pagination and sorting information
+     * @param request  pagination request
      * @return a page of {@link LoanResponse} records for the member
      */
     @GetMapping("/loans/member/{memberId}")
+    @PreAuthorize("@memberSecurity.isOwner(#memberId, authentication.name) or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get loans by member", tags = "Loans")
     public Page<LoanResponse> getLoansByMember(@PathVariable UUID memberId, PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.page(), request.size());
@@ -263,27 +278,20 @@ public class LibraryController {
     /**
      * Retrieves all loans for a specific book with pagination.
      *
-     * @param bookId   the UUID of the book
-     * @param pageable pagination and sorting information
+     * @param bookId  the UUID of the book
+     * @param request pagination request
      * @return a page of {@link LoanResponse} records for the book
      */
     @GetMapping("/loans/book/{bookId}")
+    @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
     @Operation(summary = "Get loans by book", tags = "Loans")
     public Page<LoanResponse> getLoansByBook(@PathVariable UUID bookId, PaginationRequest request) {
         Pageable pageable = PageRequest.of(request.page(), request.size());
         return libraryService.getLoansByBook(bookId, pageable).map(this::toLoanResponse);
     }
 
-    /**
-     * Maps a {@link Loan} entity into a {@link LoanResponse} DTO suitable for API output.
-     *
-     * @param loan the loan entity
-     * @return mapped {@link LoanResponse}, or null if input is null
-     */
     private LoanResponse toLoanResponse(Loan loan) {
-        if (loan == null) {
-            return null;
-        }
+        if (loan == null) return null;
         return new LoanResponse(
                 loan.getId(),
                 loan.getBook().getId(),
@@ -298,16 +306,8 @@ public class LibraryController {
                 loan.getUpdatedAt());
     }
 
-    /**
-     * Maps a {@link Book} entity into a {@link BookResponse} DTO suitable for API output.
-     *
-     * @param book the book entity
-     * @return mapped {@link BookResponse}, or null if input is null
-     */
     private BookResponse toBookResponse(Book book) {
-        if (book == null) {
-            return null;
-        }
+        if (book == null) return null;
         return new BookResponse(
                 book.getId(),
                 book.getTitle(),
@@ -319,17 +319,8 @@ public class LibraryController {
                 book.getUpdatedAt());
     }
 
-    /**
-     * Maps a {@link Member} entity into a {@link MemberResponse} DTO suitable for API output.
-     *
-     * @param member the member entity
-     * @return mapped {@link MemberResponse}, or null if input is null
-     */
     private MemberResponse toMemberResponse(Member member) {
-        if (member == null) {
-            return null;
-        }
-
+        if (member == null) return null;
         return new MemberResponse(
                 member.getId(),
                 member.getFirstName(),
