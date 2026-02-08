@@ -12,6 +12,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -53,9 +54,8 @@ public class MemberService {
      * @throws IllegalStateException if no member exists with the given id
      */
     @Transactional(readOnly = true)
-    public Member getMemberById(@Nonnull UUID id) {
-        return memberRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Member not found"));
+    public Optional<Member> getMemberById(@Nonnull UUID id) {
+        return memberRepository.findById(id);
     }
 
     /**
@@ -66,9 +66,8 @@ public class MemberService {
      * @throws IllegalStateException if no member exists with the given email
      */
     @Transactional(readOnly = true)
-    public Member getMemberByEmail(@Nonnull @NotBlank @Email String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("No member found with email: " + email));
+    public Optional<Member> getMemberByEmail(@Nonnull @NotBlank @Email String email) {
+        return memberRepository.findByEmail(email);
     }
 
     /**
@@ -110,14 +109,13 @@ public class MemberService {
      * @throws IllegalStateException if the member does not exist
      */
     @Transactional
-    public Member updateMember(@Nonnull UUID id, Member details) {
-        Member existing = getMemberById(id);
+    public Member updateMember(@Nonnull Member existingMember, Member updatedMember) {
 
-        existing.setFirstName(details.getFirstName());
-        existing.setLastName(details.getLastName());
-        existing.setEmail(details.getEmail());
+        existingMember.setFirstName(updatedMember.getFirstName());
+        existingMember.setLastName(updatedMember.getLastName());
+        existingMember.setEmail(updatedMember.getEmail());
 
-        return memberRepository.save(existing);
+        return memberRepository.save(existingMember);
     }
 
     /**

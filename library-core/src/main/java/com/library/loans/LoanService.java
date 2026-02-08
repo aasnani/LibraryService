@@ -29,16 +29,6 @@ public class LoanService {
     private final LoanRepository loanRepository;
 
     /**
-     * Retrieves all loan records from the database.
-     *
-     * @return a list of all {@link Loan} entities.
-     */
-    @Transactional(readOnly = true)
-    public List<Loan> getAllLoans() {
-        return loanRepository.findAll();
-    }
-
-    /**
      * Counts the number of active (unreturned) loans associated with a specific
      * member.
      *

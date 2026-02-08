@@ -13,8 +13,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -28,7 +33,11 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(LibraryController.class)
+@WebMvcTest(
+    controllers = LibraryController.class,
+    useDefaultFilters = false, // Stops scanning the whole package
+    includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = LibraryController.class)
+)
 class LibraryControllerTest {
 
     @Autowired
@@ -37,8 +46,11 @@ class LibraryControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // -------------------------------
+    // MOCK SERVICE
+    // -------------------------------
     @MockBean
-    private LibraryService libraryService;
+    private LibraryService libraryService; // <-- only mock the service
 
     private Book sampleBook;
     private Member sampleMember;
@@ -74,7 +86,6 @@ class LibraryControllerTest {
     // -------------------------------
     // BOOK TESTS
     // -------------------------------
-
     @Test
     void testGetAllBooks() throws Exception {
         when(libraryService.getBooks(ArgumentMatchers.any(Pageable.class)))
@@ -129,7 +140,6 @@ class LibraryControllerTest {
     // -------------------------------
     // MEMBER TESTS
     // -------------------------------
-
     @Test
     void testGetAllMembers() throws Exception {
         when(libraryService.getMembers(ArgumentMatchers.any(Pageable.class)))
@@ -184,7 +194,6 @@ class LibraryControllerTest {
     // -------------------------------
     // LOAN TESTS
     // -------------------------------
-
     @Test
     void testCheckoutBook() throws Exception {
         when(libraryService.checkoutBook(memberId, bookId)).thenReturn(sampleLoan);

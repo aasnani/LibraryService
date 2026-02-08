@@ -81,19 +81,6 @@ class LoanServiceTest {
     }
 
     @Test
-    @DisplayName("Should retrieve all loans")
-    void getAllLoans_Success() {
-        Loan loan1 = new Loan();
-        Loan loan2 = new Loan();
-        when(loanRepository.findAll()).thenReturn(List.of(loan1, loan2));
-
-        var loans = loanService.getAllLoans();
-
-        assertThat(loans).hasSize(2).containsExactly(loan1, loan2);
-        verify(loanRepository).findAll();
-    }
-
-    @Test
     @DisplayName("Should count active loans for a member")
     void getActiveLoanCountForMember_Success() {
         when(loanRepository.countByMemberIdAndReturnedAtIsNull(member.getId())).thenReturn(3L);

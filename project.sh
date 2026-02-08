@@ -1,25 +1,22 @@
 #!/bin/bash
 
 case "$1" in
-  gradle_lock)
+  resolve)
     ./gradlew writeAllLocks --write-locks --no-configuration-cache
     ;;
-  gradle_build)
+  build)
     ./gradlew build
     ;;
-  gradle_test)
+  test)
     ./gradlew test
     ;;
-  docker_build)
+  build_image)
     docker build -t library-service .
     ;;
-  docker_run)
-    docker compose up
-    ;;
-  docker_build_run)
+  run)
     docker compose up --build
     ;;
   *)
-    echo "Usage: ./project.sh {gradle_lock|gradle_build|gradle_test|gradle_build_test|docker_build|docker_run|docker_build_run}"
+    echo "Usage: ./project.sh {resolve|build|build_image|test|run}"
     exit 1
 esac

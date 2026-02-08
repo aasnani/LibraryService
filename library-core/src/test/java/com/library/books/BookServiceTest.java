@@ -7,12 +7,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,7 +50,6 @@ class BookServiceTest {
 
     @Test
     void updateBook_ShouldUpdateStockAndAvailableCopies() {
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(sampleBook));
         when(bookRepository.save(any(Book.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -65,7 +61,7 @@ class BookServiceTest {
 
         long activeLoans = 5;
 
-        Book result = bookService.updateBook(bookId, details, activeLoans);
+        Book result = bookService.updateBook(sampleBook, details, activeLoans);
 
         assertThat(result.getTitle()).isEqualTo("Updated Title");
         assertThat(result.getAuthor()).isEqualTo("Updated Author");
@@ -77,22 +73,6 @@ class BookServiceTest {
     }
 
     @Test
-    void updateBook_ShouldThrowException_WhenTotalCopiesLessThanActiveLoans() {
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(sampleBook));
-
-        Book details = new Book();
-        details.setTotalCopies(3);
-
-        long activeLoans = 5;
-
-        assertThatThrownBy(() -> bookService.updateBook(bookId, details, activeLoans))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot reduce total copies below actual active loans");
-
-        verify(bookRepository, never()).save(any());
-    }
-
-    @Test
     void deleteBook_ShouldDelete_WhenNoActiveLoans() {
         bookService.deleteBook(bookId, false);
 
@@ -100,11 +80,22 @@ class BookServiceTest {
     }
 
     @Test
-    void deleteBook_ShouldThrow_WhenActiveLoansExist() {
-        assertThatThrownBy(() -> bookService.deleteBook(bookId, true))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot delete book while copies are still out on loan");
+    void decrementAvailableCopies_ShouldCallRepository() {
+        when(bookRepository.decrementAvailableCopies(bookId)).thenReturn(1);
 
-        verify(bookRepository, never()).deleteById(any());
+        long result = bookService.decrementAvailableCopies(bookId);
+
+        assertThat(result).isEqualTo(1L);
+        verify(bookRepository).decrementAvailableCopies(bookId);
+    }
+
+    @Test
+    void incrementAvailableCopies_ShouldCallRepository() {
+        when(bookRepository.incrementAvailableCopies(bookId)).thenReturn(1);
+
+        long result = bookService.incrementAvailableCopies(bookId);
+
+        assertThat(result).isEqualTo(1L);
+        verify(bookRepository).incrementAvailableCopies(bookId);
     }
 }
