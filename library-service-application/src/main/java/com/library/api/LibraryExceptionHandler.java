@@ -4,6 +4,8 @@ import com.library.api.response.ErrorResponse;
 import com.library.exceptions.LibraryException;
 import com.library.exceptions.LibraryException.LibraryExceptionType;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -23,9 +25,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class LibraryExceptionHandler {
 
-    /**
-     * Handles custom library exceptions and exposes their message.
-     */
+    private static final Logger log = LoggerFactory.getLogger(LibraryExceptionHandler.class);
+
     @ExceptionHandler(LibraryException.class)
     public ResponseEntity<ErrorResponse> handleLibraryException(LibraryException ex, HttpServletRequest request) {
         HttpStatus status;
@@ -46,16 +47,15 @@ public class LibraryExceptionHandler {
         ErrorResponse body = new ErrorResponse(
                 status.value(),
                 ex.getType().name(),
-                ex.getMessage(), // safe to show because it’s our exception
+                ex.getMessage(),
                 request.getRequestURI()
         );
+
+        log.warn("LibraryException: type={}, message={}, path={}", ex.getType(), ex.getMessage(), request.getRequestURI());
 
         return ResponseEntity.status(status).body(body);
     }
 
-    /**
-     * Handles Spring Data integrity violations with a safe, generic message.
-     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex,
                                                                       HttpServletRequest request) {
@@ -65,12 +65,12 @@ public class LibraryExceptionHandler {
                 "Operation could not be completed due to data constraints.",
                 request.getRequestURI()
         );
+
+        log.error("DataIntegrityViolation: path={}, message={}", request.getRequestURI(), ex.getMessage(), ex);
+
         return ResponseEntity.badRequest().body(body);
     }
 
-    /**
-     * Handles cases where a requested resource does not exist in the database.
-     */
     @ExceptionHandler(EmptyResultDataAccessException.class)
     public ResponseEntity<ErrorResponse> handleEmptyResultException(EmptyResultDataAccessException ex,
                                                                     HttpServletRequest request) {
@@ -80,18 +80,16 @@ public class LibraryExceptionHandler {
                 "The requested resource does not exist.",
                 request.getRequestURI()
         );
+
+        log.warn("Resource not found: path={}, message={}", request.getRequestURI(), ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    /**
-     * Handles Jakarta Bean Validation errors (@Valid / @Validated),
-     * providing field-specific messages safely.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex,
                                                                    HttpServletRequest request) {
 
-        // Combine field errors into a comma-separated string: "field: message"
         String errors = ex.getBindingResult()
                           .getFieldErrors()
                           .stream()
@@ -105,12 +103,11 @@ public class LibraryExceptionHandler {
                 request.getRequestURI()
         );
 
+        log.info("Validation error: path={}, errors={}", request.getRequestURI(), errors);
+
         return ResponseEntity.badRequest().body(body);
     }
 
-    /**
-     * Handles all uncaught exceptions and returns a generic safe message.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         ErrorResponse body = new ErrorResponse(
@@ -119,6 +116,9 @@ public class LibraryExceptionHandler {
                 "An unexpected error occurred. Please contact support.",
                 request.getRequestURI()
         );
+
+        log.error("Unhandled exception: path={}, message={}", request.getRequestURI(), ex.getMessage(), ex);
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

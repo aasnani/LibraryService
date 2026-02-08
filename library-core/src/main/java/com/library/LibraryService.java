@@ -7,14 +7,19 @@ import com.library.exceptions.LibraryException;
 import com.library.exceptions.LibraryException.LibraryExceptionType;
 import com.library.members.Member;
 import com.library.members.MemberService;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 import com.library.loans.Loan;
 import com.library.loans.LoanService;
 import com.library.loans.LoanStatsProjection;
 
 import jakarta.annotation.Nonnull;
-
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,6 +46,20 @@ public class LibraryService {
     private final MemberService memberService;
     private final LoanService loanService;
     private final LoanPolicyProperties policy;
+
+    // Inject MeterRegistry without modifying constructor
+    @Autowired
+    private MeterRegistry meterRegistry;
+
+    // Example counters
+    private Counter booksCheckedOut;
+    private Counter booksReturned;
+
+    @PostConstruct
+    private void initMetrics() {
+        booksCheckedOut = meterRegistry.counter("library.books.checkedout.total");
+        booksReturned = meterRegistry.counter("library.books.returned.total");
+    }
 
     // ----------------------------------------
     // Books
@@ -111,7 +130,8 @@ public class LibraryService {
      * @param bookId      the id of the book to update
      * @param updatedBook the updated book details
      * @return the updated {@link Book}
-     * @throws LibraryException if the book is not found or total copies < active loans
+     * @throws LibraryException if the book is not found or total copies < active
+     *                          loans
      */
     @Transactional
     public Book updateBook(@Nonnull UUID bookId, @Nonnull Book updatedBook) {
@@ -327,6 +347,8 @@ public class LibraryService {
                             stats.getOverdueLoans() - policy.getOverdueBlockThreshold()));
         }
 
+        booksCheckedOut.increment();
+
         bookService.decrementAvailableCopies(bookId);
         return loanService.createLoanRecord(member, book, policy.getLoanDurationDays());
     }
@@ -345,6 +367,9 @@ public class LibraryService {
             throw new LibraryException(LibraryExceptionType.LIBRARY_NO_ACTIVE_LOAN,
                     "No active loan found to return");
         }
+
+        booksReturned.increment();
+
         bookService.incrementAvailableCopies(bookId);
     }
 
