@@ -10,11 +10,11 @@ A Java-based microservice for managing a book catalog, library members, and borr
 | :--- | :--- |
 | **Catalog Management** | CRUD endpoints for the `Book` entity. |
 | **Member Management** | CRUD endpoints for the `Member` entity. |
-| **Borrowing/Returns** | `LoanService` handles checkout and return logic, including inventory updates. |
+| **Borrowing/Returns** | `LibraryService` handles checkout and return logic, including inventory updates. |
 | **Borrowing Rules** | Enforced via `LoanPolicyProperties` using values defined in `application.yaml`. |
 | **Persistence** | PostgreSQL database with schema management via Flyway. |
-| **Security** | Spring Security 6 using Basic Auth (Plaintext) with `USER`, `LIBRARIAN`, and `ADMIN` roles. |
-| **Observability** | Spring Boot Actuator for health/metrics and Logback for JSON-structured logging. |
+| **Security** | Spring Security 6 using Basic Auth (Plaintext/NOOP) with `USER`, `LIBRARIAN`, and `ADMIN` roles. |
+| **Observability** | Spring Boot Actuator for health/metrics, Logback for JSON-structured logging and Micrometer for custom metrics. |
 | **Testing** | Unit tests and Integration tests using Testcontainers. |
 
 ---
@@ -48,7 +48,7 @@ The following rules are enforced in the service layer:
 2. **Overdue Block**: Members with at least one overdue loan are blocked from further borrowing.
 3. **Loan Duration**: Due dates are calculated based on a configurable number of days from the borrowing date.
 
-These rules can be found in `application.yml`.
+These rules can be found in `application.yaml`.
 
 ---
 
