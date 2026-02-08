@@ -8,6 +8,8 @@ testcontainers = "1.20.4"
 junitPlatform = "1.11.4"
 jakartaAnnotation = "2.1.1"
 jakartaValidation = "3.0.2"
+springDoc = "2.8.0"
+
 
 [libraries]
 # Spring Boot Starters
@@ -34,6 +36,9 @@ jakarta-validation = { group = "jakarta.validation", name = "jakarta.validation-
 # Database & Tools
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+
+# Documentation
+spring-doc = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springDoc" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
