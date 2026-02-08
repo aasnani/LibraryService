@@ -19,19 +19,26 @@ A Java-based microservice for managing a book catalog, library members, and borr
 
 ---
 
-## 2. Architecture & Schema
+## 2. Architecture & Database Schema
 
 ### Project Structure
 The project is organized into two modules to separate core domain logic from the application and web layers:
 * **`library-core`**: Contains the domain entities, repository interfaces, and core business services.
 * **`library-service-application`**: Contains the Spring Boot entry point, REST controllers, security configurations, and DTOs.
 
-
-
 ### Database Schema
-The database consists of three primary tables: `books`, `members`, and `loans`. Automated PostgreSQL triggers manage `updated_at` timestamps for auditing purposes.
+The persistence layer is managed by **Flyway** and consists of three primary tables:
 
 
+
+* **`books`**: Stores inventory details including `isbn`, `total_copies`, and `available_copies`.
+* **`members`**: Stores user registration data including unique `email` and names.
+* **`loans`**: A junction table linking members and books. It tracks the `borrowed_at` timestamp, the calculated `due_date`, and the nullable `returned_at` field.
+
+### Automated Triggers & Auditing
+To ensure data integrity and consistent auditing, the database utilizes PostgreSQL triggers:
+* **Audit Function**: A shared PL/pgSQL function `update_modified_column()` is used to automatically refresh the `updated_at` timestamp.
+* **Update Triggers**: Attached to all three core tables (`books`, `members`, `loans`), these triggers fire on every `UPDATE` operation to maintain an accurate record of when data was last modified without requiring manual application-level intervention.
 
 ---
 
