@@ -52,10 +52,10 @@ The following rules are enforced in the service layer:
 
 ## 4. Security & Authentication
 
-The API is secured using **HTTP Basic Authentication**. Credentials are managed via an in-memory store initialized from `src/main/resources/auth/users.json`. Passwords in this version are stored and compared in **plaintext**.
+The API is secured using **HTTP Basic Authentication**. Credentials are managed via an in-memory store initialized from `src/main/resources/auth/users.json`. Passwords in this version are stored and compared in **plaintext**. Do not include any values such as `{noop}`.
 
 ### How to Authenticate
-* **Swagger UI**: Click the **"Authorize"** button and enter a `username` and `password` from `users.json`.
+* **Swagger UI**: When trying out an endpoint, it will prompt you for a username and password.
 * **Postman**: In the "Authorization" tab, select **Basic Auth** and enter the credentials.
 * **Roles**: Authorization is role-based (e.g., only `LIBRARIAN` or `ADMIN` can modify the catalog).
 
