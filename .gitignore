@@ -26,6 +26,7 @@ replay_pid*
 # Gradle files
 .gradle
 build
+!gradle/wrapper/gradle-wrapper.jar
 
 # Kotlin plugin data
 .kotlin
