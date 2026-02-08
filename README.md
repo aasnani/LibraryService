@@ -22,7 +22,7 @@ A Java-based microservice for managing a book catalog, library members, and borr
 ## 2. Architecture & Schema
 
 ### Project Structure
-The project is organized into two modules:
+The project is organized into two modules to separate core domain logic from the application and web layers:
 * **`library-core`**: Contains the domain entities, repository interfaces, and core business services.
 * **`library-service-application`**: Contains the Spring Boot entry point, REST controllers, security configurations, and DTOs.
 
@@ -43,10 +43,18 @@ The following rules are enforced in the service layer:
 
 ---
 
-## 4. How to Run
+## 4. Prerequisites
+To build and run this service, you need:
+* **Java 21**
+* **Docker & Docker Compose**: Required for running the database stack and executing integration tests via Testcontainers.
+* **Bash Environment**: To execute the `project.sh` utility script.
+
+---
+
+## 5. How to Run
 
 ### Using the Utility Script
-A `project.sh` script is included for management:
+A `project.sh` script is included to manage the development lifecycle:
 
 * **Build**: `./project.sh build`
 * **Test**: `./project.sh test`
@@ -55,7 +63,17 @@ A `project.sh` script is included for management:
 
 ---
 
-## 5. API Documentation & Testing
+## 6. Testing
+The project includes a comprehensive test suite:
+* **Unit Tests**: Test business logic in isolation using JUnit 5 and Mockito.
+* **Integration Tests**: Verify persistence and repository logic using **Testcontainers** to spin up a real PostgreSQL instance.
+* **Commands**:
+    * Run all tests: `./project.sh test`
+    * Run specific tests via Gradle: `./gradlew test --tests "com.library.*"`
+
+---
+
+## 7. API Documentation & Testing
 
 The service provides OpenAPI 3.0 documentation. Once the service is running, it can be accessed and tested at the following URLs:
 
@@ -64,7 +82,7 @@ The service provides OpenAPI 3.0 documentation. Once the service is running, it 
 
 ---
 
-## 6. Future Improvements
+## 8. Future Improvements
 
 * **Fine Tracking**: Logic to calculate and persist financial penalties for late returns.
 * **Soft Deletes**: Implementing a deletion flag for records to maintain data history.
