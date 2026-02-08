@@ -21,7 +21,6 @@ $$ language 'plpgsql';
 -- BOOKS: Inventory tracking
 CREATE TABLE books (
     id UUID PRIMARY KEY,
-    book_number BIGINT UNIQUE NOT NULL,
     isbn VARCHAR(255) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
@@ -34,7 +33,6 @@ CREATE TABLE books (
 -- MEMBERS: User management
 CREATE TABLE members (
     id UUID PRIMARY KEY,
-    membership_number BIGINT UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
@@ -65,8 +63,6 @@ CREATE TRIGGER update_loans_modtime BEFORE UPDATE ON loans FOR EACH ROW EXECUTE 
 -- BOOKS Table Indexes
 -- Unique index for ISBN (used for book identification)
 CREATE UNIQUE INDEX idx_book_isbn ON books(isbn);
--- Unique index for internal library tracking number
-CREATE UNIQUE INDEX idx_book_number ON books(book_number);
 -- Standard B-tree indexes for search functionality
 CREATE INDEX idx_book_title ON books(title);
 CREATE INDEX idx_book_author ON books(author);
@@ -74,8 +70,6 @@ CREATE INDEX idx_book_author ON books(author);
 -- MEMBERS Table Indexes
 -- Unique index for login/contact email
 CREATE UNIQUE INDEX idx_member_email ON members(email);
--- Unique index for physical membership card scanning
-CREATE UNIQUE INDEX idx_member_membership_number ON members(membership_number);
 -- Standard index for directory searching by surname
 CREATE INDEX idx_member_last_first_name ON members(last_name, first_name);
 

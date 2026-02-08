@@ -32,7 +32,4 @@ public class Book extends BaseEntity {
 
     @Column(name = "available_copies", nullable = false)
     private int availableCopies;
-
-    @Column(name = "book_number", unique = true, nullable = false)
-    private Long bookNumber;
 }

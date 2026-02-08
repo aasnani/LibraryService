@@ -12,7 +12,5 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     Optional<Member> findByEmail(String email);
 
-    Optional<Member> findByMembershipNumber(Long membershipNumber);
-
     List<Member> findByLastNameIgnoreCaseAndFirstNameIgnoreCase(String lastName, String firstName);
 }
