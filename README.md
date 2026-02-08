@@ -13,7 +13,7 @@ A Java-based microservice for managing a book catalog, library members, and borr
 | **Borrowing/Returns** | `LoanService` handles checkout and return logic, including inventory updates. |
 | **Borrowing Rules** | Enforced via `LoanPolicyProperties` using values defined in `application.yaml`. |
 | **Persistence** | PostgreSQL database with schema management via Flyway. |
-| **Security** | Spring Security 6 using Basic Authentication with `USER`, `LIBRARIAN`, and `ADMIN` roles. |
+| **Security** | Spring Security 6 using NOOP with `USER`, `LIBRARIAN`, and `ADMIN` roles. |
 | **Observability** | Spring Boot Actuator for health/metrics and Logback for JSON-structured logging. |
 | **Testing** | Unit tests and Integration tests using Testcontainers. |
 
@@ -94,3 +94,4 @@ The service provides OpenAPI 3.0 documentation. Once the service is running, it 
 * **Fine Tracking**: Logic to calculate and persist financial penalties for late returns.
 * **Soft Deletes**: Implementing a deletion flag for records to maintain data history.
 * **Search Filters**: Adding multi-criteria filtering for the book catalog.
+* **Encrypted Password**: Adding support for encrypted/salted passwords.
