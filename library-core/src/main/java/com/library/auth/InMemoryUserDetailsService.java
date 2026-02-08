@@ -11,39 +11,35 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Loads users from `auth/users.json` in the classpath.
+ * Passwords are plain-text.
+ */
 @Service
 public class InMemoryUserDetailsService implements UserDetailsService {
 
-    private final List<UserDetails> users;
+    private final List<JsonUser> jsonUsers;
 
     public InMemoryUserDetailsService(ObjectMapper mapper) {
         try (InputStream is = new ClassPathResource("auth/users.json").getInputStream()) {
-
-            List<JsonUser> jsonUsers =
-                    mapper.readValue(is, new TypeReference<>() {});
-
-            this.users = jsonUsers.stream()
-                    .map(u -> User.builder()
-                            .username(u.username)
-                            .password(u.password)
-                            .roles(u.roles.toArray(new String[0]))
-                            .build())
-                    .collect(Collectors.toList());
-
+            this.jsonUsers = mapper.readValue(is, new TypeReference<>() {});
         } catch (Exception e) {
             throw new RuntimeException("Failed to load users.json", e);
         }
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
-
-        return users.stream()
-                .filter(u -> u.getUsername().equals(username))
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        JsonUser user = jsonUsers.stream()
+                .filter(u -> u.username.equals(username))
                 .findFirst()
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        return User.builder()
+                .username(user.username)
+                .password(user.password)
+                .roles(user.roles.toArray(new String[0]))
+                .build();
     }
 
     @Data

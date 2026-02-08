@@ -1,17 +1,17 @@
 [
   {
     "username": "member1@library.com",
-    "password": "password",
+    "password": "{noop}password",
     "roles": ["USER"]
   },
   {
     "username": "librarian@library.com",
-    "password": "password",
+    "password": "{noop}password",
     "roles": ["LIBRARIAN"]
   },
   {
     "username": "admin@library.com",
-    "password": "password",
+    "password": "{noop}password",
     "roles": ["ADMIN"]
   }
 ]
