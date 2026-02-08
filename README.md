@@ -127,8 +127,9 @@ You can import the following JSON snippet into Postman to test the service healt
 
 ## 8. Future Improvements
 
+* **Author Entity**: Implementing an author entity to support author specific operations.
 * **Fine Tracking**: Logic to calculate and persist financial penalties for late returns.
 * **Soft Deletes**: Implementing a deletion flag for records to maintain data history.
 * **Search Filters**: Adding multi-criteria filtering for the book catalog.
 * **Secure Authentication**: Adding support for encrypted/salted passwords.
-* **More Complete API**: Adding endpoints following further requirements gathering of the caller (e.g front end service).
+* **More Complete API**: Adding endpoints following further requirements gathering of the caller (e.g front end service needs endpoint for overdue loans of a particular member).
