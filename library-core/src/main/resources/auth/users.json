@@ -1,17 +1,17 @@
 [
   {
     "username": "member1@library.com",
-    "password": "$2a$10$Dow1XKQ7v7JYQz0kQyQF5eJ7x5Yz5m7Q8Z8rQmY6Ww2r0GQxjFf7K",
+    "password": "password",
     "roles": ["USER"]
   },
   {
     "username": "librarian@library.com",
-    "password": "$2a$10$Dow1XKQ7v7JYQz0kQyQF5eJ7x5Yz5m7Q8Z8rQmY6Ww2r0GQxjFf7K",
+    "password": "password",
     "roles": ["LIBRARIAN"]
   },
   {
     "username": "admin@library.com",
-    "password": "$2a$10$Dow1XKQ7v7JYQz0kQyQF5eJ7x5Yz5m7Q8Z8rQmY6Ww2r0GQxjFf7K",
+    "password": "password",
     "roles": ["ADMIN"]
   }
 ]

@@ -17,7 +17,7 @@ public class InMemoryUserDetailsService implements UserDetailsService {
     private final List<UserDetails> users;
 
     public InMemoryUserDetailsService(ObjectMapper mapper) {
-        try (InputStream is = new ClassPathResource("users.json").getInputStream()) {
+        try (InputStream is = new ClassPathResource("auth/users.json").getInputStream()) {
 
             List<JsonUser> jsonUsers =
                     mapper.readValue(is, new TypeReference<>() {});
