@@ -33,7 +33,7 @@ The persistence layer is managed by **Flyway** and consists of three primary tab
 
 * **`books`**: Stores inventory details including `isbn`, `total_copies`, and `available_copies`.
 * **`members`**: Stores user registration data including unique `email` and names.
-* **`loans`**: A junction table linking members and books. It tracks the `borrowed_at` timestamp, the calculated `due_date`, and the nullable `returned_at` field.
+* **`loans`**: A junction table linking members and books. Contains foreign key references to bookId and memberId. It tracks the `borrowed_at` timestamp, the calculated `due_date`, and the nullable `returned_at` field.
 
 ### Automated Triggers & Auditing
 To ensure data integrity and consistent auditing, the database utilizes PostgreSQL triggers:
