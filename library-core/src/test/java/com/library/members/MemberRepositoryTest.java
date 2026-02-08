@@ -22,7 +22,7 @@ class MemberRepositoryTest extends BaseRepositoryTest {
     @Transactional
     @DisplayName("Should persist member and verify audit timestamps")
     void shouldSaveMemberSuccessfully() {
-        Member saved = saveMember("Jane", "Doe", "jane.doe@library.com", 20260001L);
+        Member saved = saveMember("Jane", "Doe", "jane.doe@library.com");
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getCreatedAt()).isNotNull();
@@ -33,7 +33,7 @@ class MemberRepositoryTest extends BaseRepositoryTest {
     @Transactional
     @DisplayName("Should find member by email")
     void shouldFindByEmail() {
-        saveMember("Search", "User", "find@test.com", 555L);
+        saveMember("Search", "User", "find@test.com");
 
         Optional<Member> found = memberRepository.findByEmail("find@test.com");
 
@@ -45,8 +45,8 @@ class MemberRepositoryTest extends BaseRepositoryTest {
     @Transactional
     @DisplayName("Should find members by last name ignoring case")
     void shouldFindByLastName() {
-        saveMember("Alice", "Smith", "alice@test.com", 101L);
-        saveMember("Bob", "SMITH", "bob@test.com", 102L);
+        saveMember("Alice", "Smith", "alice@test.com");
+        saveMember("Bob", "SMITH", "bob@test.com");
 
         List<Member> results = memberRepository.findByLastNameIgnoreCaseAndFirstNameIgnoreCase("smith", "alice");
 
@@ -56,44 +56,20 @@ class MemberRepositoryTest extends BaseRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("Should find a member by membership number")
-    void shouldFindByMembershipNumber() {
-        saveMember("John", "Doe", "john@test.com", 8888L);
-
-        Optional<Member> found = memberRepository.findByMembershipNumber(8888L);
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getEmail()).isEqualTo("john@test.com");
-    }
-
-    @Test
-    @Transactional
     @DisplayName("Should fail when email is duplicated")
     void shouldFailOnDuplicateEmail() {
-        saveMember("User1", "Test", "conflict@test.com", 1001L);
+        saveMember("User1", "Test", "conflict@test.com");
 
         assertThrows(DataIntegrityViolationException.class, () ->
-            saveMember("User2", "Test", "conflict@test.com", 1002L)
+            saveMember("User2", "Test", "conflict@test.com")
         );
     }
 
-    @Test
-    @Transactional
-    @DisplayName("Should fail when membership number is duplicated")
-    void shouldFailOnDuplicateMembershipNumber() {
-        saveMember("User1", "Test", "u1@test.com", 999L);
-
-        assertThrows(DataIntegrityViolationException.class, () ->
-            saveMember("User2", "Test", "u2@test.com", 999L)
-        );
-    }
-
-    private Member saveMember(String first, String last, String email, Long number) {
+    private Member saveMember(String first, String last, String email) {
         Member member = new Member();
         member.setFirstName(first);
         member.setLastName(last);
         member.setEmail(email);
-        member.setMembershipNumber(number);
         return memberRepository.saveAndFlush(member);
     }
 }

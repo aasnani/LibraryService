@@ -6,17 +6,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -59,32 +57,75 @@ class LoanServiceTest {
     }
 
     @Test
-    @DisplayName("Should close loan record by setting returnedAt timestamp")
+    @DisplayName("Should close active loan record and return update count")
     void closeLoanRecord_Success() {
-        Loan activeLoan = new Loan();
-        activeLoan.setBorrowedAt(java.time.OffsetDateTime.now().minusDays(1));
-        activeLoan.setReturnedAt(null);
+        when(loanRepository.closeLoanRecord(member.getId(), book.getId()))
+                .thenReturn(1);
 
-        when(loanRepository.findByMemberIdAndBookIdAndReturnedAtIsNull(member.getId(), book.getId()))
-                .thenReturn(Optional.of(activeLoan));
-        when(loanRepository.save(any(Loan.class))).thenAnswer(i -> i.getArgument(0));
+        long updated = loanService.closeLoanRecord(member.getId(), book.getId());
 
-        loanService.closeLoanRecord(member.getId(), book.getId());
-
-        assertThat(activeLoan.getReturnedAt()).isNotNull();
-        verify(loanRepository).save(activeLoan);
+        assertThat(updated).isEqualTo(1L);
+        verify(loanRepository).closeLoanRecord(member.getId(), book.getId());
     }
 
     @Test
-    @DisplayName("Should throw exception when closing loan that does not exist")
-    void closeLoanRecord_NotFound() {
-        when(loanRepository.findByMemberIdAndBookIdAndReturnedAtIsNull(any(), any()))
-                .thenReturn(Optional.empty());
+    @DisplayName("Should return zero when no active loan exists to close")
+    void closeLoanRecord_NoActiveLoan() {
+        when(loanRepository.closeLoanRecord(member.getId(), book.getId()))
+                .thenReturn(0);
 
-        assertThatThrownBy(() -> loanService.closeLoanRecord(member.getId(), book.getId()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("No active loan found");
+        long updated = loanService.closeLoanRecord(member.getId(), book.getId());
 
-        verify(loanRepository, never()).save(any());
+        assertThat(updated).isZero();
+        verify(loanRepository).closeLoanRecord(member.getId(), book.getId());
     }
+
+    @Test
+    @DisplayName("Should retrieve all loans")
+    void getAllLoans_Success() {
+        Loan loan1 = new Loan();
+        Loan loan2 = new Loan();
+        when(loanRepository.findAll()).thenReturn(List.of(loan1, loan2));
+
+        var loans = loanService.getAllLoans();
+
+        assertThat(loans).hasSize(2).containsExactly(loan1, loan2);
+        verify(loanRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("Should count active loans for a member")
+    void getActiveLoanCountForMember_Success() {
+        when(loanRepository.countByMemberIdAndReturnedAtIsNull(member.getId())).thenReturn(3L);
+
+        long count = loanService.getActiveLoanCountForMember(member.getId());
+
+        assertThat(count).isEqualTo(3L);
+        verify(loanRepository).countByMemberIdAndReturnedAtIsNull(member.getId());
+    }
+
+    @Test
+    @DisplayName("Should count active loans for a book")
+    void getActiveLoanCountForBook_Success() {
+        when(loanRepository.countByBookIdAndReturnedAtIsNull(book.getId())).thenReturn(2L);
+
+        long count = loanService.getActiveLoanCountForBook(book.getId());
+
+        assertThat(count).isEqualTo(2L);
+        verify(loanRepository).countByBookIdAndReturnedAtIsNull(book.getId());
+    }
+
+    @Test
+    @DisplayName("Should retrieve loan stats projection")
+    void getLoanStatsProjection_Success() {
+        LoanStatsProjection projection = mock(LoanStatsProjection.class);
+        when(loanRepository.getLoanStatsForMember(member.getId(), book.getId()))
+                .thenReturn(projection);
+
+        LoanStatsProjection result = loanService.getLoanStatsProjection(member.getId(), book.getId());
+
+        assertThat(result).isEqualTo(projection);
+        verify(loanRepository).getLoanStatsForMember(member.getId(), book.getId());
+    }
+
 }

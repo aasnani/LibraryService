@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,74 +23,128 @@ class LoanRepositoryTest extends BaseRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("Should find active loans for a specific member")
-    void shouldFindActiveLoansByMember() {
-        Member member = createAndSaveMember("Active", "Borrower", "active@test.com", 100L);
-        Book book = createAndSaveBook("Clean Code", "9780132350884", 500L);
+    @DisplayName("Counts active loans for a member")
+    void shouldCountActiveLoansForMember() {
+        Member member = createAndSaveMember("Active", "Borrower", "active@test.com");
+        Book book = createAndSaveBook("Clean Code", "9780132350884");
 
-        // Save one active loan (returnedAt is null)
         saveLoan(member, book, OffsetDateTime.now(), LocalDate.now().plusDays(14), null);
 
-        List<Loan> activeLoans = loanRepository.findByMemberIdAndReturnedAtIsNull(member.getId());
+        long count = loanRepository.countByMemberIdAndReturnedAtIsNull(member.getId());
 
-        assertThat(activeLoans).hasSize(1);
-        assertThat(activeLoans.get(0).getBook().getTitle()).isEqualTo("Clean Code");
+        assertThat(count).isEqualTo(1);
     }
 
     @Test
     @Transactional
-    @DisplayName("Should find all loans associated with a specific book")
-    void shouldFindByBookId() {
-        Member member = createAndSaveMember("John", "Doe", "john@test.com", 101L);
-        Book book = createAndSaveBook("Refactoring", "9780134757599", 501L);
+    @DisplayName("Counts active loans for a book")
+    void shouldCountActiveLoansForBook() {
+        Member member = createAndSaveMember("John", "Doe", "john@test.com");
+        Book book = createAndSaveBook("Refactoring", "9780134757599");
 
-        saveLoan(member, book, OffsetDateTime.now(), LocalDate.now().plusDays(7), OffsetDateTime.now());
+        saveLoan(member, book, OffsetDateTime.now(), LocalDate.now().plusDays(7), null);
 
-        List<Loan> bookHistory = loanRepository.findByBookId(book.getId());
+        long count = loanRepository.countByBookIdAndReturnedAtIsNull(book.getId());
 
-        assertThat(bookHistory).hasSize(1);
-        assertThat(bookHistory.get(0).getMember().getLastName()).isEqualTo("Doe");
+        assertThat(count).isEqualTo(1);
     }
 
     @Test
     @Transactional
-    @DisplayName("Should find overdue loans that have not been returned")
-    void shouldFindOverdueUnreturnedLoans() {
-        Member member = createAndSaveMember("Late", "User", "late@test.com", 102L);
-        Book book = createAndSaveBook("Database Internals", "9781492040347", 502L);
+    @DisplayName("Counts active loans for a book and member pair")
+    void shouldCountActiveLoansForBookAndMember() {
+        Member member = createAndSaveMember("Jane", "Smith", "jane@test.com");
+        Book book = createAndSaveBook("DDD", "9780321125217");
 
-        // Loan was due yesterday
-        saveLoan(member, book, OffsetDateTime.now().minusDays(15), LocalDate.now().minusDays(1), null);
+        saveLoan(member, book, OffsetDateTime.now(), LocalDate.now().plusDays(10), null);
 
-        List<Loan> overdueLoans = loanRepository.findByDueDateBeforeAndReturnedAtIsNull(LocalDate.now());
+        long count = loanRepository.countByMemberIdAndBookIdAndReturnedAtIsNull(
+                member.getId(), book.getId());
 
-        assertThat(overdueLoans).hasSize(1);
-        assertThat(overdueLoans.get(0).getMember().getFirstName()).isEqualTo("Late");
+        assertThat(count).isEqualTo(1);
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Returns aggregated loan stats for a member")
+    void shouldReturnLoanStatsProjection() {
+        Member member = createAndSaveMember("Late", "User", "late@test.com");
+        Book book1 = createAndSaveBook("Database Internals", "9781492040347");
+        Book book2 = createAndSaveBook("Designing Data-Intensive Apps", "9781449373320");
+
+        // Active, overdue
+        saveLoan(
+                member,
+                book1,
+                OffsetDateTime.now().minusDays(20),
+                LocalDate.now().minusDays(5),
+                null
+        );
+
+        // Active, not overdue
+        saveLoan(
+                member,
+                book2,
+                OffsetDateTime.now(),
+                LocalDate.now().plusDays(7),
+                null
+        );
+
+        LoanStatsProjection stats =
+                loanRepository.getLoanStatsForMember(member.getId(), book1.getId());
+
+        assertThat(stats.getActiveLoans()).isEqualTo(2);
+        assertThat(stats.getOverdueLoans()).isEqualTo(1);
+        assertThat(stats.getHasThisBook()).isTrue();
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("Closes an active loan and returns affected row count")
+    void shouldCloseLoanRecord() {
+        Member member = createAndSaveMember("Return", "User", "return@test.com");
+        Book book = createAndSaveBook("Clean Architecture", "9780134494166");
+
+        saveLoan(member, book, OffsetDateTime.now(), LocalDate.now().plusDays(14), null);
+
+        long closed = loanRepository.closeLoanRecord(member.getId(), book.getId());
+
+        assertThat(closed).isEqualTo(1);
+
+        long remaining =
+                loanRepository.countByMemberIdAndBookIdAndReturnedAtIsNull(
+                        member.getId(), book.getId());
+
+        assertThat(remaining).isEqualTo(0);
     }
 
     // --- Helpers ---
 
-    private Member createAndSaveMember(String first, String last, String email, Long num) {
+    private Member createAndSaveMember(String first, String last, String email) {
         Member m = new Member();
         m.setFirstName(first);
         m.setLastName(last);
         m.setEmail(email);
-        m.setMembershipNumber(num);
         return memberRepository.saveAndFlush(m);
     }
 
-    private Book createAndSaveBook(String title, String isbn, Long num) {
+    private Book createAndSaveBook(String title, String isbn) {
         Book b = new Book();
         b.setTitle(title);
         b.setAuthor("Sample Author");
         b.setIsbn(isbn);
-        b.setBookNumber(num);
         b.setTotalCopies(1);
         b.setAvailableCopies(1);
         return bookRepository.saveAndFlush(b);
     }
 
-    private Loan saveLoan(Member member, Book book, OffsetDateTime borrowed, LocalDate due, OffsetDateTime returned) {
+    private Loan saveLoan(
+            Member member,
+            Book book,
+            OffsetDateTime borrowed,
+            LocalDate due,
+            OffsetDateTime returned
+    ) {
         Loan loan = new Loan();
         loan.setMember(member);
         loan.setBook(book);

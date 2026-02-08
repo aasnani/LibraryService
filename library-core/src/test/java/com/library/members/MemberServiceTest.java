@@ -31,12 +31,12 @@ class MemberServiceTest {
     @BeforeEach
     void setUp() {
         memberId = UUID.randomUUID();
+
         sampleMember = new Member();
         sampleMember.setId(memberId);
         sampleMember.setFirstName("John");
         sampleMember.setLastName("Doe");
         sampleMember.setEmail("john.doe@example.com");
-        sampleMember.setMembershipNumber(1001L);
     }
 
     @Test
@@ -46,8 +46,11 @@ class MemberServiceTest {
 
         Member result = memberService.getMemberById(memberId);
 
+        assertThat(result).isSameAs(sampleMember);
         assertThat(result.getEmail()).isEqualTo("john.doe@example.com");
+
         verify(memberRepository).findById(memberId);
+        verifyNoMoreInteractions(memberRepository);
     }
 
     @Test
@@ -58,13 +61,17 @@ class MemberServiceTest {
         assertThatThrownBy(() -> memberService.getMemberById(memberId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Member not found");
+
+        verify(memberRepository).findById(memberId);
+        verifyNoMoreInteractions(memberRepository);
     }
 
     @Test
     @DisplayName("Should update member details correctly")
     void updateMember_Success() {
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(sampleMember));
-        when(memberRepository.save(any(Member.class))).thenAnswer(i -> i.getArgument(0));
+        when(memberRepository.save(any(Member.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Member updates = new Member();
         updates.setFirstName("Jane");
@@ -73,19 +80,23 @@ class MemberServiceTest {
 
         Member result = memberService.updateMember(memberId, updates);
 
-        assertThat(result.getFirstName()).isEqualTo("Jane");
-        assertThat(result.getEmail()).isEqualTo("jane.smith@example.com");
-        // Ensure ID remains the same
         assertThat(result.getId()).isEqualTo(memberId);
+        assertThat(result.getFirstName()).isEqualTo("Jane");
+        assertThat(result.getLastName()).isEqualTo("Smith");
+        assertThat(result.getEmail()).isEqualTo("jane.smith@example.com");
+
+        verify(memberRepository).findById(memberId);
+        verify(memberRepository).save(sampleMember);
+        verifyNoMoreInteractions(memberRepository);
     }
 
     @Test
     @DisplayName("Should call delete when no active loans exist")
     void deleteMember_Success() {
-        // hasActiveLoans is passed as false from LibraryService logic
         memberService.deleteMember(memberId, false);
 
         verify(memberRepository).deleteById(memberId);
+        verifyNoMoreInteractions(memberRepository);
     }
 
     @Test
@@ -96,5 +107,6 @@ class MemberServiceTest {
                 .hasMessageContaining("Cannot delete member while they have active loans");
 
         verify(memberRepository, never()).deleteById(any());
+        verifyNoInteractions(memberRepository);
     }
 }
