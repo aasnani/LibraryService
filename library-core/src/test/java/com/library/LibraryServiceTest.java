@@ -7,6 +7,7 @@ import com.library.loans.LoanService;
 import com.library.loans.LoanStatsProjection;
 import com.library.members.Member;
 import com.library.members.MemberService;
+import com.library.exceptions.LibraryException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,10 +16,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,8 +59,8 @@ class LibraryServiceTest {
     void checkoutBook_Success() {
         LoanStatsProjection stats = mock(LoanStatsProjection.class);
 
-        when(memberService.getMemberById(memberId)).thenReturn(member);
-        when(bookService.getBookById(bookId)).thenReturn(book);
+        when(memberService.getMemberById(memberId)).thenReturn(Optional.of(member));
+        when(bookService.getBookById(bookId)).thenReturn(Optional.of(book));
         when(loanService.getLoanStatsProjection(memberId, bookId)).thenReturn(stats);
 
         when(stats.getActiveLoans()).thenReturn(2L);
@@ -67,8 +70,6 @@ class LibraryServiceTest {
         when(policy.getMaxActive()).thenReturn(5);
         when(policy.getOverdueBlockThreshold()).thenReturn(0);
         when(policy.getLoanDurationDays()).thenReturn(14);
-
-        when(bookService.decrementAvailableCopies(bookId)).thenReturn(1L);
 
         libraryService.checkoutBook(memberId, bookId);
 
@@ -81,12 +82,12 @@ class LibraryServiceTest {
     void checkoutBook_OutOfStock() {
         book.setAvailableCopies(0);
 
-        when(memberService.getMemberById(memberId)).thenReturn(member);
-        when(bookService.getBookById(bookId)).thenReturn(book);
+        when(memberService.getMemberById(memberId)).thenReturn(Optional.of(member));
+        when(bookService.getBookById(bookId)).thenReturn(Optional.of(book));
 
         assertThatThrownBy(() -> libraryService.checkoutBook(memberId, bookId))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("No copies available");
+                .isInstanceOf(LibraryException.class)
+                .hasMessageContaining("no available copies");
 
         verifyNoInteractions(loanService);
     }
@@ -96,17 +97,24 @@ class LibraryServiceTest {
     void checkoutBook_MaxLoansReached() {
         LoanStatsProjection stats = mock(LoanStatsProjection.class);
 
-        when(memberService.getMemberById(memberId)).thenReturn(member);
-        when(bookService.getBookById(bookId)).thenReturn(book);
+        // Stub the underlying services, used by LibraryService.getMember() / getBook()
+        when(memberService.getMemberById(memberId)).thenReturn(Optional.of(member));
+        when(bookService.getBookById(bookId)).thenReturn(Optional.of(book));
         when(loanService.getLoanStatsProjection(memberId, bookId)).thenReturn(stats);
 
+        // Stats values to trigger the exception
         when(stats.getActiveLoans()).thenReturn(5L);
         when(policy.getMaxActive()).thenReturn(5);
 
         assertThatThrownBy(() -> libraryService.checkoutBook(memberId, bookId))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("maximum loan limit");
+                .isInstanceOf(LibraryException.class)
+                .hasMessageContaining("maximum number of loans");
+
+        // verify only relevant interactions
+        verify(loanService).getLoanStatsProjection(memberId, bookId);
+        verify(stats).getActiveLoans();
     }
+
 
     @Test
     @DisplayName("Should return book successfully")
@@ -125,19 +133,21 @@ class LibraryServiceTest {
         when(loanService.closeLoanRecord(memberId, bookId)).thenReturn(0);
 
         assertThatThrownBy(() -> libraryService.returnBook(memberId, bookId))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("No active loan found");
+                .isInstanceOf(LibraryException.class)
+                .hasMessageContaining("No active loan");
 
         verify(bookService, never()).incrementAvailableCopies(any());
     }
 
     @Test
-    @DisplayName("Should check for active loans before removing book")
+    @DisplayName("Should throw error when trying to remove a book with active loans")
     void removeBook_WithActiveLoans() {
         when(loanService.getActiveLoanCountForBook(bookId)).thenReturn(1L);
 
-        libraryService.removeBook(bookId);
+        assertThatThrownBy(() -> libraryService.removeBook(bookId))
+                .isInstanceOf(LibraryException.class)
+                .hasMessageContaining("Cannot delete book while copies are still on loan");
 
-        verify(bookService).deleteBook(bookId, true);
+        verify(bookService, never()).deleteBook(any(), anyBoolean());
     }
 }

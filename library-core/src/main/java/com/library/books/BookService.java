@@ -7,12 +7,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -25,6 +27,7 @@ import java.util.UUID;
  * adjustments during loan operations.
  */
 @Service
+@Validated
 @RequiredArgsConstructor
 public class BookService {
 
@@ -44,13 +47,12 @@ public class BookService {
      * Retrieves a book by its unique identifier.
      *
      * @param id the unique identifier of the book
-     * @return the matching {@link Book}
-     * @throws IllegalStateException if the book does not exist
+     * @return an {@link Optional} containing the matching {@link Book} if found,
+     *         or {@link Optional#empty()} if no book exists with the given id
      */
     @Transactional(readOnly = true)
-    public Book getBookById(@Nonnull UUID id) {
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Book not found or has been deleted"));
+    public Optional<Book> getBookById(@Nonnull UUID id) {
+        return bookRepository.findById(id);
     }
 
     /**
@@ -61,14 +63,13 @@ public class BookService {
      * before repository access.
      *
      * @param isbn the ISBN of the book
-     * @return the matching {@link Book}
-     * @throws IllegalStateException if the book does not exist
+     * @return an {@link Optional} containing the matching {@link Book} if found,
+     *         or {@link Optional#empty()} if no book exists with the given ISBN
      */
     @Transactional(readOnly = true)
     @Pattern(regexp = "^(97(8|9))?\\d{9}(\\d|X)$", message = "Invalid ISBN format")
-    public Book getBookByIsbn(@Nonnull @NotBlank String isbn) {
-        return bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new IllegalStateException("Book not found or has been deleted"));
+    public Optional<Book> getBookByIsbn(@Nonnull @NotBlank String isbn) {
+        return bookRepository.findByIsbn(isbn);
     }
 
     /**
@@ -117,29 +118,19 @@ public class BookService {
      * currently active loans. Available copies are recalculated based on
      * the provided total and active loan count.
      *
-     * @param id          the unique identifier of the book to update
-     * @param details     the updated book details
-     * @param activeLoans the number of active loans for the book
-     * @return the updated {@link Book}
-     * @throws IllegalStateException if the update would violate inventory
-     *                               constraints
+     * @param existingBook the existing {@link Book} entity to update
+     * @param updatedBook  the updated book details
+     * @param activeLoans  the number of active loans for the book
+     * @return the updated {@link Book} after saving to the repository
      */
     @Transactional
-    public Book updateBook(@NonNull UUID id, Book details, long activeLoans) {
-        Book existing = getBookById(id);
-
-        if (details.getTotalCopies() < activeLoans) {
-            throw new IllegalStateException(
-                    "Cannot reduce total copies below actual active loans: " + activeLoans);
-        }
-
-        existing.setTitle(details.getTitle());
-        existing.setAuthor(details.getAuthor());
-        existing.setIsbn(details.getIsbn());
-        existing.setTotalCopies(details.getTotalCopies());
-        existing.setAvailableCopies((int) (details.getTotalCopies() - activeLoans));
-
-        return bookRepository.save(existing);
+    public Book updateBook(@NonNull Book existingBook, @Nonnull Book updatedBook, long activeLoans) {
+        existingBook.setTitle(updatedBook.getTitle());
+        existingBook.setAuthor(updatedBook.getAuthor());
+        existingBook.setIsbn(updatedBook.getIsbn());
+        existingBook.setTotalCopies(updatedBook.getTotalCopies());
+        existingBook.setAvailableCopies((int) (updatedBook.getTotalCopies() - activeLoans));
+        return bookRepository.save(existingBook);
     }
 
     /**
@@ -151,14 +142,9 @@ public class BookService {
      *
      * @param id             the unique identifier of the book
      * @param hasActiveLoans whether the book currently has active loans
-     * @throws IllegalStateException if deletion is attempted while loans are active
      */
     @Transactional
     public void deleteBook(@NonNull UUID id, boolean hasActiveLoans) {
-        if (hasActiveLoans) {
-            throw new IllegalStateException("Cannot delete book while copies are still out on loan");
-        }
-
         bookRepository.deleteById(id);
     }
 
